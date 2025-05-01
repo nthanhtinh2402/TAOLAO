@@ -19,6 +19,7 @@ import envatoRoutes from './envato/routes/envatoRoutes.js';
 import artlistRoutes from './artlist/routes/artlistRoutes.js';
 import generalRoutes from './general/routes/generalRoutes.js';
 import youtubeRoutes from './youtube/routes/youtubeRoutes.js';
+import epidemicsoundRoutes from './epidemicsound/routes/epidemicsoundRoutes.js'; // ✅ sửa tên đúng
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -33,6 +34,7 @@ app.use('/tiktok', tiktokRoutes);
 app.use('/envato', envatoRoutes);
 app.use('/artlist', artlistRoutes);
 app.use('/general', generalRoutes);
+app.use('/epidemicsound', epidemicsoundRoutes); // ✅ mount đúng tên
 
 // API getlink tự động nhận dạng domain
 app.get('/api/getlink', async (req, res) => {
@@ -45,25 +47,23 @@ app.get('/api/getlink', async (req, res) => {
     let result;
 
     if (url.includes('tiktok.com')) {
-      // Gọi service TikTok
       result = await tiktokService.getDownloadLink(url, req.protocol + '://' + req.get('host'));
     } else if (url.includes('envato.com')) {
-      // Dynamic import service Envato
       const envatoService = await import('./envato/services/envatoService.js');
       result = await envatoService.default.getDownloadLink(url);
     } else if (url.includes('artlist.io')) {
-      // Dynamic import service Artlist
       const artlistService = await import('./artlist/services/artlistService.js');
       result = await artlistService.default.getDownloadLink(url);
+    } else if (url.includes('epidemicsound.com')) {
+      const epidemicsoundService = await import('./epidemicsound/services/epidemicsoundService.js'); // ✅ dynamic import đúng tên
+      result = await epidemicsoundService.default.getDownloadLink(url);
     } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
-      // Dynamic import service YouTube — truyền cả req
       const youtubeService = await import('./youtube/services/youtubeService.js');
       result = await youtubeService.default.getDownloadLink(url, req);
     } else {
       return res.status(400).json({ error: 'Không hỗ trợ URL này' });
     }
 
-    // Trả kết quả
     res.json({ downloadLink: result });
   } catch (err) {
     console.error('[ERROR]', err);
